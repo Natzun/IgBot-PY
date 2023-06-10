@@ -3,29 +3,21 @@
 # * -- Imports
 import os
 import sys
+
 from dotenv import load_dotenv
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
-
-
-
-chrome_options = webdriver.ChromeOptions()
-chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
-
-driver = webdriver.Chrome(service=Service(
-    ChromeDriverManager().install()), options=chrome_options)
+from instagrapi import Client
 
 # * -- Variables
 title = "IgBot-PY"  # ? Title
-path = os.path.realpath(__file__)  # ? Directory path
+PATH = os.path.realpath(__file__)  # ? Directory path
 
-load_dotenv(dotenv_path=".env")  # ? Load .env file
-test = os.getenv("TEST")  # ? Test variable
+DOT_ENV_PATH = f"{PATH.replace('main.py', '')}..\\.env"  # ? .env file path
+load_dotenv(dotenv_path=DOT_ENV_PATH, override=True)  # ? Load .env file
+
+TEST = os.getenv("TEST")  # ? Test variable
+USERNAME = os.getenv("USERNAME2")  # ? Username variable
+PASSWORD = os.getenv("PASSWORD")  # ? Password variable
+
 
 # * -- Functions
 
@@ -34,36 +26,40 @@ def clearConsole() -> None:  # ? Clear console
     os.system("cls" if os.name == "nt" else "clear")
 
 
+def checkVars() -> None:
+    print(f"[{title}#checkVars] PATH", PATH)
+    print(f"[{title}#checkVars] DOT_ENV_PATH", DOT_ENV_PATH)
+    print(f"[{title}#checkVars] TEST", TEST)
+    print(f"[{title}#checkVars] USERNAME", USERNAME)
+    print(f"[{title}#checkVars] PASSWORD", PASSWORD)
+
 def main() -> None:
-    driver.get("https://www.instagram.com")
+    try:
+        # clearConsole()
+        checkVars()
 
-    element = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.XPATH, '//*[@id="loginForm"]/div/div[1]/div/label/input'))
-    )
-    element.send_keys(os.getenv("USERNAME2"))
+        print(f"[{title}#main] init")
 
-    element = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.XPATH, '//*[@id="loginForm"]/div/div[2]/div/label/input'))
-    )
-    element.send_keys(os.getenv("PASSWORD"))
-    element.send_keys(Keys.ENTER)
+        cl = Client()
+        cl.login(USERNAME, PASSWORD)
 
-    element = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.XPATH, '//*[@id="mount_0_0_aV"]/div/div/div[2]/div/div/div/div[1]/div[1]/div[2]/section/main/div/div/div/div/div'))
-    )
-    element.send_keys(Keys.ENTER)
+        media = cl.photo_upload(
+            f"{PATH.replace('main.py', '')}\\assets\\images\\post1.jpg",
+            "Upload by IgBot-PY #devlopment",
+            extra_data={
+                "custom_accessibility_caption": "alt text example",
+                "like_and_view_counts_disabled": 1,
+                "disable_comments": 1,
+            }
+        )
+        media.dict()
 
-    # elem.clear()
-    # elem.send_keys(Keys.RETURN)
-    # driver.send_keys(Keys.RETURN)
+        print(f"[{title}#main] end")
+    except Exception as e:
+        _, _, exc_tb = sys.exc_info()
+        print(f"[{title}#main] error (line: {exc_tb.tb_lineno}): ", e)
 
-    input(f"[{title}#main] Press Enter to close...")
-    driver.close()
 
 #! Main
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        _, _, exc_tb = sys.exc_info()
-        print(f"[{title}#__main__] error (line: {exc_tb.tb_lineno}): ", e)
+    main()
